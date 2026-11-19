@@ -27,18 +27,16 @@ pnpm build
 ## MVP atual
 
 - Estrutura base com background (alarms + notifications)
-- Detector skeleton do ChatGPT
+- Detector do ChatGPT lê `settings.training_allowed` em `GET /backend-api/settings/user`
 - Popup Svelte que lista status
 - Storage local para logs e preferências
 - Permissões opcionais por host
 
 ## Próximos passos
 
-1. Implementar o detector real do ChatGPT (fetch autenticado ou executeScript)
-2. Adicionar Claude, Perplexity, Gemini, Grok
-3. Página de opções completa
-4. Testes com fixtures de HTML/JSON salvos
-5. Ícones finais e publicação
+1. Adicionar Claude, Perplexity, Gemini, Grok
+2. Página de opções completa
+3. Ícones finais e publicação
 
 ## Permissões
 
