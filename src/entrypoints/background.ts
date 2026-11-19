@@ -75,7 +75,7 @@ async function runChecks() {
         service: detector.id,
         status: result.status,
         changed,
-        detectorVersion: '0.1.0',
+        detectorVersion: detector.version,
       });
 
       if (changed && result.status === 'on') {

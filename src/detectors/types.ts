@@ -12,6 +12,7 @@ export interface Detector {
   name: string;
   settingsUrl: string;
   hostPermission: string;
+  version: string;
   check(): Promise<CheckResult>;
 }
 
