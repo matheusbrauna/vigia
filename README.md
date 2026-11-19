@@ -12,12 +12,17 @@ Alarme open source que avisa quando uma ferramenta de IA volta a treinar com as 
 ## Como rodar
 
 ```bash
-cd vigia
-pnpm install   # ou npm install
+pnpm install
 pnpm dev       # carrega no Chrome em modo desenvolvimento
 ```
 
 Depois abra `chrome://extensions`, ative o modo desenvolvedor e carregue a pasta `.output/chrome-mv3`.
+
+```bash
+pnpm typecheck
+pnpm test
+pnpm build
+```
 
 ## MVP atual
 
@@ -33,7 +38,7 @@ Depois abra `chrome://extensions`, ative o modo desenvolvedor e carregue a pasta
 2. Adicionar Claude, Perplexity, Gemini, Grok
 3. Página de opções completa
 4. Testes com fixtures de HTML/JSON salvos
-5. Ícones e publicação
+5. Ícones finais e publicação
 
 ## Permissões
 
