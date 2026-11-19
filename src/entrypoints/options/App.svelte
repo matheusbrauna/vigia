@@ -14,7 +14,7 @@
   });
 
   async function save() {
-    await savePrefs(prefs);
+    await savePrefs($state.snapshot(prefs));
     saved = true;
     setTimeout(() => (saved = false), 2000);
   }

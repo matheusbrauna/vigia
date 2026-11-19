@@ -1,6 +1,8 @@
-import { detectors } from '../detectors';
+import { detectors, getDetector } from '../detectors';
 import { CHECK_ALARM_NAME, didStatusChange, normalizeCheckInterval } from '../lib/checks';
 import { addLog, getPrefs, PREFS_KEY } from '../lib/storage';
+
+const SETTINGS_NOTIFICATION_PREFIX = 'vigia-settings:';
 
 export default defineBackground(() => {
   void syncAlarm();
@@ -15,6 +17,16 @@ export default defineBackground(() => {
     if (area === 'local' && PREFS_KEY in changes) {
       void syncAlarm();
     }
+  });
+
+  chrome.notifications.onClicked.addListener((notificationId) => {
+    if (!notificationId.startsWith(SETTINGS_NOTIFICATION_PREFIX)) return;
+
+    const detector = getDetector(notificationId.slice(SETTINGS_NOTIFICATION_PREFIX.length));
+    if (detector) {
+      void chrome.tabs.create({ url: detector.settingsUrl });
+    }
+    void chrome.notifications.clear(notificationId);
   });
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -67,7 +79,7 @@ async function runChecks() {
       });
 
       if (changed && result.status === 'on') {
-        chrome.notifications.create({
+        void chrome.notifications.create(`${SETTINGS_NOTIFICATION_PREFIX}${detector.id}`, {
           type: 'basic',
           iconUrl: 'icon/128.png',
           title: 'Vigia',
