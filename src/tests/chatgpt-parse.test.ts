@@ -1,6 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import labelHtml from './fixtures/chatgpt/data-controls-label.html?raw';
-import shellHtml from './fixtures/chatgpt/data-controls-shell.html?raw';
 import sessionAuthenticated from './fixtures/chatgpt/session-authenticated.json';
 import sessionLoggedOut from './fixtures/chatgpt/session-logged-out.json';
 import sessionMalformed from './fixtures/chatgpt/session-malformed.json';
@@ -10,7 +8,6 @@ import settingsOff from './fixtures/chatgpt/settings-off.json';
 import settingsOn from './fixtures/chatgpt/settings-on.json';
 import {
   classifySession,
-  parseDataControlsHtml,
   parseTrainingSettings,
   resultForHttpStatus,
 } from '../detectors/chatgpt-parse';
@@ -58,13 +55,5 @@ describe('resultForHttpStatus', () => {
     expect(resultForHttpStatus(403)?.status).toBe('not-logged-in');
     expect(resultForHttpStatus(500)?.status).toBe('unknown');
     expect(resultForHttpStatus(200)).toBeNull();
-  });
-});
-
-describe('parseDataControlsHtml', () => {
-  it('does not infer the toggle from the page shell or from visible labels', () => {
-    expect(parseDataControlsHtml(shellHtml).status).toBe('unknown');
-    expect(parseDataControlsHtml(labelHtml).status).toBe('unknown');
-    expect(parseDataControlsHtml('   ').status).toBe('unknown');
   });
 });

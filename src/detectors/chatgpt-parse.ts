@@ -95,14 +95,3 @@ export function parseTrainingSettings(body: unknown): CheckResult {
   }
   return unknownResult('A resposta do ChatGPT não trouxe o estado do treinamento.');
 }
-
-/**
- * The public data-controls page does not include the toggle. Refuse to
- * infer on/off from markup, including pages that mention the setting by name.
- */
-export function parseDataControlsHtml(html: string): CheckResult {
-  if (html.trim() === '') {
-    return unknownResult('A página de controles de dados veio vazia.');
-  }
-  return unknownResult('A página de controles de dados não informa o estado do treinamento.');
-}
