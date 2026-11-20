@@ -1,22 +1,67 @@
 # Vigia
 
-Alarme open source que avisa quando uma ferramenta de IA volta a treinar com as suas conversas.
+Chrome extension (Manifest V3) that reads ChatGPT's model-training setting from the signed-in browser session, stores each check locally, and notifies you when a check reports that setting on.
+
+> **Status:** Version 0.1.0. This repository includes no Chrome Web Store listing.
+
+## Why
+
+ChatGPT exposes "Improve the model for everyone" as `settings.training_allowed` on the signed-in account. Vigia reads that flag on a schedule, appends every check to local storage, and notifies you when the check reports training on.
+
+## Current status
+
+- Background service worker (`src/entrypoints/background.ts`) uses Chrome `alarms` and `notifications`. The alarm name is `vigia-check`. The default period is 360 minutes. Periods below 30 minutes are raised to 30, and a non-numeric period falls back to 360.
+- ChatGPT is the only registered detector (`src/detectors/index.ts`). It runs when `chatgpt` is in `enabledServices` (the default). Without `https://chatgpt.com/*`, that check returns `unknown` and does not call ChatGPT.
+- The detector's only network calls are two credentialed reads:
+  - `GET https://chatgpt.com/api/auth/session` — a non-empty string `accessToken` means signed in. An empty session, HTTP 401, or HTTP 403 is `not-logged-in`.
+  - `GET https://chatgpt.com/backend-api/settings/user` with `Authorization: Bearer <accessToken>` — the parsed field is `settings.training_allowed`. `true` is `on`, `false` is `off`, and any other shape is `unknown`.
+- The access token stays in memory for that settings request and is cleared afterward. It is not stored.
+- Svelte 5 popup shows the status from a `CHECK_NOW` message. When `https://chatgpt.com/*` is missing, the popup shows a button that requests that origin.
+- Options page (`options.html`, Chrome's options UI with `open_in_tab` false) saves `checkIntervalMinutes`. It leaves enabled services and desired status unchanged. When those fields are unset, the defaults are `chatgpt` and `off`. The page says those controls are still to come.
+- `chrome.storage.local` keeps `vigia_logs` (newest first, 500 entries) and `vigia_prefs`.
+- Vitest covers the ChatGPT session and settings fixtures in `src/tests/fixtures/chatgpt/`, plus the interval, log-trim, and desired-status helpers.
+
+A notification is created when the check status is `on` and that status differs from the desired status. With the default desired status of `off`, every check that reads training on notifies again. Clicking the notification opens `https://chatgpt.com/settings/data-controls`.
+
+`src/detectors/index.ts` names Claude, Perplexity, Gemini, and Grok as later detectors. They are not registered.
+
+## Privacy and permissions
+
+The production manifest (`pnpm build`) requests:
+
+- `storage` — logs and preferences in `chrome.storage.local` on this browser
+- `alarms` — the periodic check
+- `notifications` — the training-on alert
+
+Optional host permissions, with no required host permissions and no `<all_urls>`:
+
+- `https://chatgpt.com/*` — requested from the popup
+- `https://claude.ai/*`
+- `https://www.perplexity.ai/*`
+- `https://myactivity.google.com/*`
+- `https://x.com/*`
+
+Only the ChatGPT origin is requested. The other four are declared and unused. Toolbar and notification icons are the PNGs in `public/icon/` (16, 32, 48, and 128).
+
+`pnpm dev` adds `tabs`, `scripting`, and `http://localhost/*` so the dev server can reload the extension. Those entries are part of the development manifest only.
 
 ## Stack
 
-- **WXT** (Chrome Extension Manifest V3)
+- **WXT** 0.21 (Manifest V3, Chrome by default)
 - **TypeScript**
 - **Svelte 5**
-- **Vitest** (testes com fixtures)
+- **Vitest**
 
-## Como rodar
+## Local development
+
+Requires Node.js >= 22 and pnpm. `packageManager` is `pnpm@10.33.4`.
 
 ```bash
 pnpm install
-pnpm dev       # carrega no Chrome em modo desenvolvimento
+pnpm dev
 ```
 
-Depois abra `chrome://extensions`, ative o modo desenvolvedor e carregue a pasta `.output/chrome-mv3`.
+`pnpm dev` runs `wxt` and writes the Chrome development build to `.output/chrome-mv3-dev`. Leave that command running, then load `.output/chrome-mv3-dev` from `chrome://extensions` with **Developer mode** enabled. The dev popup and options page load their scripts from that process.
 
 ```bash
 pnpm typecheck
@@ -24,20 +69,6 @@ pnpm test
 pnpm build
 ```
 
-## MVP atual
-
-- Estrutura base com background (alarms + notifications)
-- Detector do ChatGPT lê `settings.training_allowed` em `GET /backend-api/settings/user`
-- Popup Svelte que lista status
-- Storage local para logs e preferências
-- Permissões opcionais por host
-
-## Próximos passos
-
-1. Adicionar Claude, Perplexity, Gemini, Grok
-2. Página de opções completa
-3. Ícones finais e publicação
-
-## Permissões
-
-Só `storage`, `alarms`, `notifications` + host permissions **opcionais** por serviço. Nenhum `<all_urls>`.
+- `pnpm typecheck` runs `wxt prepare && tsc --noEmit`
+- `pnpm test` runs `vitest run`
+- `pnpm build` runs `wxt build` and writes `.output/chrome-mv3`
