@@ -1,0 +1,7 @@
+{
+  "disable_training": true,
+  "default_model": "fixture-not-a-model",
+  "connectors": {
+    "credentials": "fixture-not-a-secret"
+  }
+}

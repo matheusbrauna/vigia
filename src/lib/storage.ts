@@ -11,18 +11,18 @@ export interface Preferences {
   /**
    * Bumped when a detector joins the default enabled list.
    * Revision 1 is the 0.1.0 default (`chatgpt` only). Revision 2 adds `claude`.
-   * A stored list at the current revision is kept as written.
+   * Revision 3 adds `perplexity`. A stored list at the current revision is kept as written.
    */
   servicesRevision: number;
 }
 
 /** Current default-list revision. See `Preferences.servicesRevision`. */
-export const ENABLED_SERVICES_REVISION = 2;
+export const ENABLED_SERVICES_REVISION = 3;
 
 const defaultPrefs: Preferences = {
   desiredStatus: {},
   checkIntervalMinutes: 360,
-  enabledServices: ['chatgpt', 'claude'],
+  enabledServices: ['chatgpt', 'claude', 'perplexity'],
   servicesRevision: ENABLED_SERVICES_REVISION,
 };
 
@@ -33,7 +33,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /**
  * Fills missing prefs and adds detectors that joined the default list after
  * the stored revision. A 0.1.0 save of `['chatgpt']` had no `servicesRevision`
- * and was not a choice to leave Claude out. A list saved at the current
+ * and was not a choice to leave later detectors out. A list saved at the current
  * revision is kept as written.
  */
 export function normalizePrefs(stored: unknown): Preferences {

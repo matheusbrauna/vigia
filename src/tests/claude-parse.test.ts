@@ -15,7 +15,7 @@ function leavesAccountFieldsOut(result: unknown) {
 
 describe('detectors', () => {
   it('registers Claude with the consumer privacy page', () => {
-    expect(detectors.map((detector) => detector.id)).toEqual(['chatgpt', 'claude']);
+    expect(detectors.map((detector) => detector.id)).toEqual(['chatgpt', 'claude', 'perplexity']);
     expect(detectors[1]).toMatchObject({
       name: 'Claude',
       settingsUrl: 'https://claude.ai/settings/data-privacy-controls',

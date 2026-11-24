@@ -1,0 +1,7 @@
+{
+  "user": {
+    "id": "fixture-account-id",
+    "email": "fixture-not-an-email",
+    "name": "fixture-not-a-name"
+  }
+}

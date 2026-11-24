@@ -6,7 +6,7 @@
   let prefs: Preferences = $state({
     desiredStatus: {},
     checkIntervalMinutes: 360,
-    enabledServices: ['chatgpt', 'claude'],
+    enabledServices: ['chatgpt', 'claude', 'perplexity'],
     servicesRevision: ENABLED_SERVICES_REVISION,
   });
   let saved = $state(false);
