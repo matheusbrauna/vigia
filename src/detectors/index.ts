@@ -1,9 +1,11 @@
 import type { Detector } from './types';
 import { chatgptDetector } from './chatgpt';
+import { claudeDetector } from './claude';
 
 export const detectors: Detector[] = [
   chatgptDetector,
-  // Adicionar claude, perplexity, gemini, grok...
+  claudeDetector,
+  // Adicionar perplexity, gemini, grok...
 ];
 
 export function getDetector(id: string): Detector | undefined {

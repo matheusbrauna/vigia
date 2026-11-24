@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { didStatusChange, normalizeCheckInterval, trimLogs } from '../lib/checks';
+import { normalizePrefs } from '../lib/storage';
 
 describe('didStatusChange', () => {
   it('flags a conclusive status that differs from the desired one', () => {
@@ -20,6 +21,24 @@ describe('storage helpers', () => {
     const logs = Array.from({ length: 503 }, (_, index) => index);
     expect(trimLogs(logs, 500)).toEqual(logs.slice(0, 500));
     expect(trimLogs(logs, 0)).toEqual([]);
+  });
+
+  it('adds claude to a 0.1.0 enabled list and then keeps an explicit list', () => {
+    expect(normalizePrefs(undefined).enabledServices).toEqual(['chatgpt', 'claude']);
+
+    const migrated = normalizePrefs({
+      checkIntervalMinutes: 120,
+      enabledServices: ['chatgpt'],
+      desiredStatus: { chatgpt: 'on' },
+    });
+    expect(migrated.enabledServices).toEqual(['chatgpt', 'claude']);
+    expect(migrated.servicesRevision).toBe(2);
+    expect(migrated.checkIntervalMinutes).toBe(120);
+    expect(migrated.desiredStatus).toEqual({ chatgpt: 'on' });
+
+    expect(
+      normalizePrefs({ enabledServices: ['chatgpt'], servicesRevision: 2 }).enabledServices,
+    ).toEqual(['chatgpt']);
   });
 
   it('reads the check interval from prefs and clamps it', () => {

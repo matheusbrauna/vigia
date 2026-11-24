@@ -1,0 +1,7 @@
+{
+  "email": "fixture-not-an-email",
+  "settings": {
+    "grove_enabled": true,
+    "grove_notice_viewed_at": "fixture-notice-timestamp"
+  }
+}

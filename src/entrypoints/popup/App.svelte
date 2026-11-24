@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { CHATGPT_HOST_PERMISSION } from '../../detectors/chatgpt-parse';
-  import type { Status } from '../../detectors/types';
+  import { detectors } from '../../detectors';
+  import type { Detector, Status } from '../../detectors/types';
+  import { getPrefs } from '../../lib/storage';
 
   interface CheckResult {
     id: string;
@@ -13,17 +14,27 @@
   let results: CheckResult[] = $state([]);
   let loading = $state(false);
   let lastCheck = $state<number | null>(null);
-  let hostGranted = $state(false);
+  let granted: Record<string, boolean> = $state({});
+  let enabled: string[] = $state(['chatgpt', 'claude']);
 
-  const chatgptOrigin = { origins: [CHATGPT_HOST_PERMISSION] };
+  const pending = $derived(
+    detectors.filter((detector) => enabled.includes(detector.id) && !granted[detector.id]),
+  );
 
   async function refreshPermission() {
-    hostGranted = await chrome.permissions.contains(chatgptOrigin);
+    const next: Record<string, boolean> = {};
+    for (const detector of detectors) {
+      next[detector.id] = await chrome.permissions.contains({
+        origins: [detector.hostPermission],
+      });
+    }
+    granted = next;
   }
 
-  async function grantChatGpt() {
-    hostGranted = await chrome.permissions.request(chatgptOrigin);
-    if (hostGranted) await checkNow();
+  async function grant(detector: Detector) {
+    const ok = await chrome.permissions.request({ origins: [detector.hostPermission] });
+    granted = { ...granted, [detector.id]: ok };
+    if (ok) await checkNow();
   }
 
   async function checkNow() {
@@ -54,8 +65,15 @@
     return '#718096';
   }
 
+  function serviceName(id: string) {
+    return detectors.find((detector) => detector.id === id)?.name ?? id;
+  }
+
   onMount(() => {
     void refreshPermission();
+    void getPrefs().then((prefs) => {
+      enabled = prefs.enabledServices;
+    });
     void checkNow();
 
     const onPermissionChange = () => {
@@ -74,9 +92,13 @@
   <h1>Vigia</h1>
   <p class="subtitle">Monitora se as IAs voltaram a treinar com suas conversas</p>
 
-  {#if !hostGranted}
-    <button class="secondary" onclick={grantChatGpt}>Permitir leitura do ChatGPT</button>
-    <p class="hint">O acesso a chatgpt.com é opcional e serve só para ler se o treinamento está ligado.</p>
+  {#each pending as detector (detector.id)}
+    <button class="secondary" onclick={() => grant(detector)}>
+      Permitir leitura do {detector.name}
+    </button>
+  {/each}
+  {#if pending.length > 0}
+    <p class="hint">O acesso a cada serviço é opcional e serve só para ler se o treinamento está ligado.</p>
   {/if}
 
   <button onclick={checkNow} disabled={loading}>
@@ -90,7 +112,7 @@
   <ul>
     {#each results as r}
       <li>
-        <strong>{r.id === 'chatgpt' ? 'ChatGPT' : r.id}</strong>
+        <strong>{serviceName(r.id)}</strong>
         <span style="color: {statusColor(r.status)}">{statusLabel(r.status)}</span>
         {#if r.changed}
           <span class="alert">mudou!</span>
