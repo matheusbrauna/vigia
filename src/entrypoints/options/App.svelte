@@ -1,11 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getPrefs, savePrefs, type Preferences } from '../../lib/storage';
+  import { ENABLED_SERVICES_REVISION, getPrefs, savePrefs, type Preferences } from '../../lib/storage';
 
   let prefs: Preferences = $state({
     desiredStatus: {},
     checkIntervalMinutes: 360,
-    enabledServices: ['chatgpt'],
+    enabledServices: ['chatgpt', 'claude'],
+    servicesRevision: ENABLED_SERVICES_REVISION,
   });
   let saved = $state(false);
 
