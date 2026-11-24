@@ -32,8 +32,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 /**
  * Fills missing prefs and adds detectors that joined the default list after
- * the stored revision. The options page still cannot edit this list, so a
- * 0.1.0 save of `['chatgpt']` was not a choice to leave Claude out.
+ * the stored revision. A 0.1.0 save of `['chatgpt']` had no `servicesRevision`
+ * and was not a choice to leave Claude out. A list saved at the current
+ * revision is kept as written.
  */
 export function normalizePrefs(stored: unknown): Preferences {
   const base: Preferences = {
@@ -69,6 +70,39 @@ export function normalizePrefs(stored: unknown): Preferences {
   }
 
   return prefs;
+}
+
+/**
+ * The options page writes an explicit service list at the current revision.
+ * Unknown service ids and desired-status values are dropped. Each enabled
+ * service gets `off` when it has no stored choice. A choice for a disabled
+ * service is kept.
+ */
+export function prefsFromOptions(
+  input: {
+    checkIntervalMinutes: number;
+    enabledServices: readonly string[];
+    desiredStatus: Record<string, unknown>;
+  },
+  knownServiceIds: readonly string[],
+): Preferences {
+  const enabledServices = knownServiceIds.filter((id) => input.enabledServices.includes(id));
+  const desiredStatus: Preferences['desiredStatus'] = {};
+
+  for (const id of knownServiceIds) {
+    const status = input.desiredStatus[id];
+    if (status === 'on' || status === 'off') desiredStatus[id] = status;
+  }
+  for (const id of enabledServices) {
+    if (!desiredStatus[id]) desiredStatus[id] = 'off';
+  }
+
+  return {
+    checkIntervalMinutes: input.checkIntervalMinutes,
+    enabledServices,
+    desiredStatus,
+    servicesRevision: ENABLED_SERVICES_REVISION,
+  };
 }
 
 export async function getLogs(): Promise<LogEntry[]> {

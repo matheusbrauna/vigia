@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { didStatusChange, normalizeCheckInterval, trimLogs } from '../lib/checks';
-import { normalizePrefs } from '../lib/storage';
+import { normalizePrefs, prefsFromOptions } from '../lib/storage';
 
 describe('didStatusChange', () => {
   it('flags a conclusive status that differs from the desired one', () => {
@@ -39,6 +39,42 @@ describe('storage helpers', () => {
     expect(
       normalizePrefs({ enabledServices: ['chatgpt'], servicesRevision: 2 }).enabledServices,
     ).toEqual(['chatgpt']);
+  });
+
+  it('writes an explicit service list and drops unknown ids', () => {
+    const known = ['chatgpt', 'claude'];
+    expect(
+      prefsFromOptions(
+        {
+          checkIntervalMinutes: 120,
+          enabledServices: ['claude', 'chatgpt', 'grok'],
+          desiredStatus: { chatgpt: 'on', claude: 'off', grok: 'on' },
+        },
+        known,
+      ),
+    ).toEqual({
+      checkIntervalMinutes: 120,
+      enabledServices: ['chatgpt', 'claude'],
+      desiredStatus: { chatgpt: 'on', claude: 'off' },
+      servicesRevision: 2,
+    });
+  });
+
+  it('defaults an enabled service to off and keeps a disabled choice', () => {
+    expect(
+      prefsFromOptions(
+        {
+          checkIntervalMinutes: 360,
+          enabledServices: ['chatgpt'],
+          desiredStatus: { chatgpt: 'maybe', claude: 'on' },
+        },
+        ['chatgpt', 'claude'],
+      ),
+    ).toMatchObject({
+      enabledServices: ['chatgpt'],
+      desiredStatus: { chatgpt: 'off', claude: 'on' },
+      servicesRevision: 2,
+    });
   });
 
   it('reads the check interval from prefs and clamps it', () => {
