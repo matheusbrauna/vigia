@@ -23,26 +23,30 @@ describe('storage helpers', () => {
     expect(trimLogs(logs, 0)).toEqual([]);
   });
 
-  it('adds claude to a 0.1.0 enabled list and then keeps an explicit list', () => {
-    expect(normalizePrefs(undefined).enabledServices).toEqual(['chatgpt', 'claude']);
+  it('adds detectors that joined the default list and then keeps an explicit list', () => {
+    expect(normalizePrefs(undefined).enabledServices).toEqual(['chatgpt', 'claude', 'perplexity']);
 
-    const migrated = normalizePrefs({
+    const fromV1 = normalizePrefs({
       checkIntervalMinutes: 120,
       enabledServices: ['chatgpt'],
       desiredStatus: { chatgpt: 'on' },
     });
-    expect(migrated.enabledServices).toEqual(['chatgpt', 'claude']);
-    expect(migrated.servicesRevision).toBe(2);
-    expect(migrated.checkIntervalMinutes).toBe(120);
-    expect(migrated.desiredStatus).toEqual({ chatgpt: 'on' });
+    expect(fromV1.enabledServices).toEqual(['chatgpt', 'claude', 'perplexity']);
+    expect(fromV1.servicesRevision).toBe(3);
+    expect(fromV1.checkIntervalMinutes).toBe(120);
+    expect(fromV1.desiredStatus).toEqual({ chatgpt: 'on' });
 
     expect(
-      normalizePrefs({ enabledServices: ['chatgpt'], servicesRevision: 2 }).enabledServices,
+      normalizePrefs({ enabledServices: ['chatgpt', 'claude'], servicesRevision: 2 }).enabledServices,
+    ).toEqual(['chatgpt', 'claude', 'perplexity']);
+
+    expect(
+      normalizePrefs({ enabledServices: ['chatgpt'], servicesRevision: 3 }).enabledServices,
     ).toEqual(['chatgpt']);
   });
 
   it('writes an explicit service list and drops unknown ids', () => {
-    const known = ['chatgpt', 'claude'];
+    const known = ['chatgpt', 'claude', 'perplexity'];
     expect(
       prefsFromOptions(
         {
@@ -56,7 +60,7 @@ describe('storage helpers', () => {
       checkIntervalMinutes: 120,
       enabledServices: ['chatgpt', 'claude'],
       desiredStatus: { chatgpt: 'on', claude: 'off' },
-      servicesRevision: 2,
+      servicesRevision: 3,
     });
   });
 
@@ -73,7 +77,7 @@ describe('storage helpers', () => {
     ).toMatchObject({
       enabledServices: ['chatgpt'],
       desiredStatus: { chatgpt: 'off', claude: 'on' },
-      servicesRevision: 2,
+      servicesRevision: 3,
     });
   });
 

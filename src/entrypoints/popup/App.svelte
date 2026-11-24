@@ -15,7 +15,7 @@
   let loading = $state(false);
   let lastCheck = $state<number | null>(null);
   let granted: Record<string, boolean> = $state({});
-  let enabled: string[] = $state(['chatgpt', 'claude']);
+  let enabled: string[] = $state(['chatgpt', 'claude', 'perplexity']);
 
   const pending = $derived(
     detectors.filter((detector) => enabled.includes(detector.id) && !granted[detector.id]),
